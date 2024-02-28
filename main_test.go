@@ -6,7 +6,7 @@ import (
 
 	acmetest "github.com/cert-manager/cert-manager/test/acme"
 
-	"github.com/cert-manager/webhook-example/example"
+	"github.com/ParminCloud/arvancloud-certmanager-issuer/example"
 )
 
 var (

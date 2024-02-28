@@ -1,4 +1,4 @@
-module github.com/cert-manager/webhook-example
+module github.com/ParminCloud/arvancloud-certmanager-issuer
 
 go 1.20
 
