@@ -115,7 +115,7 @@ func (c *arvanCloudDNSProviderSolver) Present(ch *v1alpha1.ChallengeRequest) err
 	}
 	var records DNSRecords
 
-	_, err = c.SendAPIRequest("GET", "/cdn/4.0/domains/"+strings.TrimSuffix(ch.ResolvedZone, ".")+"/dns-records", apiKey, nil, &records)
+	_, err = c.SendAPIRequest("GET", "/cdn/4.0/domains/"+strings.TrimSuffix(ch.ResolvedZone, ".")+"/dns-records?type=txt", apiKey, nil, &records)
 	if err != nil {
 		return err
 	}
@@ -141,7 +141,7 @@ func (c *arvanCloudDNSProviderSolver) Present(ch *v1alpha1.ChallengeRequest) err
 		Name: name,
 	}
 	var createResponseBody any
-	createResponse, err := c.SendAPIRequest("GET", "/cdn/4.0/domains/"+strings.TrimSuffix(ch.ResolvedZone, ".")+"/dns-records", apiKey, record, &createResponseBody)
+	createResponse, err := c.SendAPIRequest("POST", "/cdn/4.0/domains/"+strings.TrimSuffix(ch.ResolvedZone, ".")+"/dns-records", apiKey, record, &createResponseBody)
 	if err != nil {
 		return err
 	}
@@ -170,14 +170,14 @@ func (c *arvanCloudDNSProviderSolver) CleanUp(ch *v1alpha1.ChallengeRequest) err
 
 	var records DNSRecords
 
-	_, err = c.SendAPIRequest("GET", "/cdn/4.0/domains/"+strings.TrimSuffix(ch.ResolvedZone, ".")+"/dns-records", apiKey, nil, &records)
+	_, err = c.SendAPIRequest("GET", "/cdn/4.0/domains/"+strings.TrimSuffix(ch.ResolvedZone, ".")+"/dns-records?type=txt", apiKey, nil, &records)
 	if err != nil {
 		return err
 	}
 
 	name := strings.TrimSuffix(strings.TrimSuffix(ch.ResolvedFQDN, ch.ResolvedZone), ".")
 	for _, record := range records.Data {
-		if record.Name == name && record.Type == "TXT" && record.Value["text"] == ch.Key {
+		if record.Name == name && record.Value["text"] == ch.Key {
 			var cleanUpResponseBody any
 			response, err := c.SendAPIRequest("DELETE", "/cdn/4.0/domains/"+strings.TrimSuffix(ch.ResolvedZone, ".")+"/dns-records/"+record.ID, apiKey, nil, cleanUpResponseBody)
 			if err != nil {
