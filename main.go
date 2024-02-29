@@ -5,16 +5,17 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/ilyakaznacheev/cleanenv"
+	_ "go.uber.org/automaxprocs"
+	"go.uber.org/zap"
 	"io"
-	"net/http"
-	"net/url"
-	"os"
-	"strings"
-	"time"
-
 	extapi "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
+	"net/http"
+	"net/url"
+	"strings"
+	"time"
 
 	"github.com/cert-manager/cert-manager/pkg/acme/webhook/apis/acme/v1alpha1"
 	"github.com/cert-manager/cert-manager/pkg/acme/webhook/cmd"
@@ -22,13 +23,17 @@ import (
 	kubemetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// TODO: Change how we are managing configurations
 var (
-	GroupName                        = os.Getenv("GROUP_NAME")
-	ArvanCloudAPIBaseURLRaw          = os.Getenv("ARVANCLOUD_API_BASE_URL")
-	ArvanCloudAPIBaseURL    *url.URL = nil
+	ArvanCloudAPIBaseURL *url.URL = nil
+	logger, loggerErr             = zap.NewProduction()
 )
 
 type (
+	arvanCloudDNSProviderGlobalConfig struct {
+		GroupName            string `env:"GROUP_NAME" env-default:"https://napi.arvancloud.ir"`
+		ArvanCloudAPIBaseURL string `env:"ARVANCLOUD_API_BASE_URL" env-default:"acme.parmin.cloud"`
+	}
 	DNSRecord struct {
 		ID    string            `json:"id,omitempty"`
 		Type  string            `json:"type"`
@@ -44,22 +49,25 @@ type (
 )
 
 func main() {
-	if GroupName == "" {
-		panic("GROUP_NAME must be specified")
+	if loggerErr != nil {
+		panic(loggerErr)
 	}
+	defer logger.Sync()
 
-	if ArvanCloudAPIBaseURLRaw == "" {
-		ArvanCloudAPIBaseURLRaw = "https://napi.arvancloud.ir"
+	var cfg arvanCloudDNSProviderGlobalConfig
+
+	err := cleanenv.ReadEnv(&cfg)
+	if err != nil {
+		panic(err)
 	}
-	ArvanCloudAPIBaseURLRaw = strings.TrimSuffix(ArvanCloudAPIBaseURLRaw, "/")
+	cfg.ArvanCloudAPIBaseURL = strings.TrimSuffix(cfg.ArvanCloudAPIBaseURL, "/")
 
-	var err error
-	ArvanCloudAPIBaseURL, err = url.ParseRequestURI(ArvanCloudAPIBaseURLRaw)
+	ArvanCloudAPIBaseURL, err = url.ParseRequestURI(cfg.ArvanCloudAPIBaseURL)
 	if err != nil {
 		panic(err)
 	}
 
-	cmd.RunWebhookServer(GroupName,
+	cmd.RunWebhookServer(cfg.GroupName,
 		&arvanCloudDNSProviderSolver{},
 	)
 }
@@ -97,6 +105,7 @@ func (c *arvanCloudDNSProviderSolver) Name() string {
 }
 
 func (c *arvanCloudDNSProviderSolver) Present(ch *v1alpha1.ChallengeRequest) error {
+	sugar := logger.Sugar()
 	cfg, err := loadConfig(ch.Config)
 	if err != nil {
 		return err
@@ -114,7 +123,12 @@ func (c *arvanCloudDNSProviderSolver) Present(ch *v1alpha1.ChallengeRequest) err
 	name := strings.TrimSuffix(strings.TrimSuffix(ch.ResolvedFQDN, ch.ResolvedZone), ".")
 	for _, record := range records.Data {
 		if record.Name == name && record.Type == "TXT" && record.Value["text"] == ch.Key {
-			// TODO: Log information about that record already exists
+			sugar.Infow(
+				"Record Already Exist",
+				"Name", record.Name,
+				"Type", record.Type,
+				"ID", record.ID,
+			)
 			return nil
 		}
 	}
@@ -135,22 +149,57 @@ func (c *arvanCloudDNSProviderSolver) Present(ch *v1alpha1.ChallengeRequest) err
 	if createResponse.StatusCode != http.StatusCreated {
 		return fmt.Errorf("Error while creating records in ArvanCloud, Status: %v, Body: %+v", createResponse.Status, createResponseBody)
 	}
+	sugar.Infow(
+		"Successfully persisted record",
+		"Name", name,
+		"Type", "TXT",
+		"Value", ch.Key,
+	)
 	return nil
 }
 
-// FIXME: Not Implemented yet.
-// CleanUp should delete the relevant TXT record from the DNS provider console.
-// If multiple TXT records exist with the same record name (e.g.
-// _acme-challenge.example.com) then **only** the record with the same `key`
-// value provided on the ChallengeRequest should be cleaned up.
-// This is in order to facilitate multiple DNS validations for the same domain
-// concurrently.
 func (c *arvanCloudDNSProviderSolver) CleanUp(ch *v1alpha1.ChallengeRequest) error {
-	// TODO: add code that deletes a record from the DNS provider's console
+	sugar := logger.Sugar()
+	cfg, err := loadConfig(ch.Config)
+	if err != nil {
+		return err
+	}
+	apiKey, err := cfg.GetAPIKey(ch.ResourceNamespace, c.kubeClient)
+	if err != nil {
+		return err
+	}
+
+	var records DNSRecords
+
+	_, err = c.SendAPIRequest("GET", "/cdn/4.0/domains/"+strings.TrimSuffix(ch.ResolvedZone, ".")+"/dns-records", apiKey, nil, &records)
+	if err != nil {
+		return err
+	}
+
+	name := strings.TrimSuffix(strings.TrimSuffix(ch.ResolvedFQDN, ch.ResolvedZone), ".")
+	for _, record := range records.Data {
+		if record.Name == name && record.Type == "TXT" && record.Value["text"] == ch.Key {
+			var cleanUpResponseBody any
+			response, err := c.SendAPIRequest("DELETE", "/cdn/4.0/domains/"+strings.TrimSuffix(ch.ResolvedZone, ".")+"/dns-records/"+record.ID, apiKey, nil, cleanUpResponseBody)
+			if err != nil {
+				return err
+			}
+			if response.StatusCode != http.StatusOK {
+				return fmt.Errorf("Error while cleaning up records from ArvanCloud, Status: %v, Body: %+v", response.Status, cleanUpResponseBody)
+			}
+			return nil
+		}
+	}
+	sugar.Warnw(
+		"Record not found to crean up in ArvanCloud",
+		"Name", name,
+		"Type", "TXT",
+		"Value", ch.Key,
+	)
 	return nil
 }
 
-func (c *arvanCloudDNSProviderSolver) SendAPIRequest(method, uri, token string, requestBody interface{}, responseBody interface{}) (*http.Response, error) {
+func (c *arvanCloudDNSProviderSolver) SendAPIRequest(method, uri, token string, requestBody any, responseBody any) (*http.Response, error) {
 	if len(strings.Split(token, " ")) != 2 {
 		return nil, fmt.Errorf("Token is not valid, it should be in two parts")
 	}

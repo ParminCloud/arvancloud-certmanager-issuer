@@ -16,7 +16,7 @@ officially supported in cert-manager core.
 
 * [ ] Add documents
 * [ ] Add CI using GH-Actions and complete Helm chart
-* [ ] Handle CleanUp
+* [x] Handle CleanUp
 
 ## Why not in core?
 
