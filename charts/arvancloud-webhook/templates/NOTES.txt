@@ -1,0 +1,66 @@
+Webhook Issuer installed successfully
+
+Here are two example usages that you can use
+
+1.
+
+	Create a secret containning your ArvanCloud APIKey
+
+	apiVersion: v1
+	kind: Secret
+	metadata:
+	  name: arvancloud-credentials
+	  namespace: cert-manager
+	stringData:
+	  apikey: "apikey xxxxxxxx.xxxxxxxxxxx.xxxxxx"
+
+	Create a ClusterIssuer or Issuer resource to make it usable with Certificate or Ingress Annotation
+
+	apiVersion: cert-manager.io/v1
+	kind: ClusterIssuer
+	metadata:
+	  name: test-issuer # Name of the issuer
+	  labels:
+	    app.kubernetes.io/name: test-issuer
+	spec:
+	  acme:
+	    server: https://acme-v02.api.letsencrypt.org/directory # URL of the server (Use staging url if you want to test)
+	    email: test@example.com # email of the user that will the notification about the cert 
+	    privateKeySecretRef:
+	      name: letsencrypt-account-key
+	    solvers:
+	    - dns01:
+	        webhook:
+	          groupName: {{ .Values.groupName }}
+	          solverName: arvancloud
+	          config:
+	            authApiSecretRef: 
+	              name: "arvancloud-credentials"
+	              key":  "apikey"
+
+
+2.
+
+	Creating ClusterIssuer or Issuer Directly without using secretRef
+
+	apiVersion: cert-manager.io/v1
+	kind: ClusterIssuer
+	metadata:
+	  name: test-issuer # Name of the issuer
+	  labels:
+	    app.kubernetes.io/name: test-issuer
+	spec:
+	  acme:
+	    server: https://acme-v02.api.letsencrypt.org/directory # URL of the server (Use staging url if you want to test)
+	    email: test@example.com # email of the user that will the notification about the cert 
+	    privateKeySecretRef:
+	      name: letsencrypt-account-key
+	    solvers:
+	    - dns01:
+	        webhook:
+	          groupName: {{ .Values.groupName }}
+	          solverName: arvancloud
+	          config:
+		    apiKey: "apikey xxxx.xxxxxxxxxxx.xxxxx"
+
+

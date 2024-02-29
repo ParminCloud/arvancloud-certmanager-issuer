@@ -23,7 +23,6 @@ import (
 	kubemetav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// TODO: Change how we are managing configurations
 var (
 	ArvanCloudAPIBaseURL *url.URL = nil
 	logger, loggerErr             = zap.NewProduction()
