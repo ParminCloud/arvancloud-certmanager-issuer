@@ -8,10 +8,9 @@ name: Container Image
 on:
   push:
     branches: ["master"]
-    # Publish semver tags as releases.
-    tags:
-      - "^v*.*.*$"
-      - "^v*.*.*-rc[0-9]$"
+  release:
+    types:
+      - published
   pull_request:
     branches: ["master"]
 
