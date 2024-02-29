@@ -30,8 +30,8 @@ var (
 
 type (
 	arvanCloudDNSProviderGlobalConfig struct {
-		GroupName            string `env:"GROUP_NAME" env-default:"https://napi.arvancloud.ir"`
-		ArvanCloudAPIBaseURL string `env:"ARVANCLOUD_API_BASE_URL" env-default:"acme.parmin.cloud"`
+		GroupName            string `env:"GROUP_NAME" env-default:"acme.parmin.cloud"`
+		ArvanCloudAPIBaseURL string `env:"ARVANCLOUD_API_BASE_URL" env-default:"https://napi.arvancloud.ir"`
 	}
 	DNSRecord struct {
 		ID    string            `json:"id,omitempty"`
@@ -109,19 +109,20 @@ func (c *arvanCloudDNSProviderSolver) Present(ch *v1alpha1.ChallengeRequest) err
 	if err != nil {
 		return err
 	}
+	name := strings.TrimSuffix(strings.TrimSuffix(ch.ResolvedFQDN, ch.ResolvedZone), ".")
+
 	apiKey, err := cfg.GetAPIKey(ch.ResourceNamespace, c.kubeClient)
 	if err != nil {
 		return err
 	}
 	var records DNSRecords
 
-	_, err = c.SendAPIRequest("GET", "/cdn/4.0/domains/"+strings.TrimSuffix(ch.ResolvedZone, ".")+"/dns-records?type=txt", apiKey, nil, &records)
+	_, err = c.SendAPIRequest("GET", "/cdn/4.0/domains/"+strings.TrimSuffix(ch.ResolvedZone, ".")+"/dns-records?type=txt&per_page=25&page=1&search="+name, apiKey, nil, &records)
 	if err != nil {
 		return err
 	}
-	name := strings.TrimSuffix(strings.TrimSuffix(ch.ResolvedFQDN, ch.ResolvedZone), ".")
 	for _, record := range records.Data {
-		if record.Name == name && record.Type == "TXT" && record.Value["text"] == ch.Key {
+		if record.Name == name && record.Value["text"] == ch.Key {
 			sugar.Infow(
 				"Record Already Exist",
 				"Name", record.Name,
@@ -163,6 +164,8 @@ func (c *arvanCloudDNSProviderSolver) CleanUp(ch *v1alpha1.ChallengeRequest) err
 	if err != nil {
 		return err
 	}
+	name := strings.TrimSuffix(strings.TrimSuffix(ch.ResolvedFQDN, ch.ResolvedZone), ".")
+
 	apiKey, err := cfg.GetAPIKey(ch.ResourceNamespace, c.kubeClient)
 	if err != nil {
 		return err
@@ -170,12 +173,11 @@ func (c *arvanCloudDNSProviderSolver) CleanUp(ch *v1alpha1.ChallengeRequest) err
 
 	var records DNSRecords
 
-	_, err = c.SendAPIRequest("GET", "/cdn/4.0/domains/"+strings.TrimSuffix(ch.ResolvedZone, ".")+"/dns-records?type=txt", apiKey, nil, &records)
+	_, err = c.SendAPIRequest("GET", "/cdn/4.0/domains/"+strings.TrimSuffix(ch.ResolvedZone, ".")+"/dns-records?type=txt&per_page=25&page=1&search="+name, apiKey, nil, &records)
 	if err != nil {
 		return err
 	}
 
-	name := strings.TrimSuffix(strings.TrimSuffix(ch.ResolvedFQDN, ch.ResolvedZone), ".")
 	for _, record := range records.Data {
 		if record.Name == name && record.Value["text"] == ch.Key {
 			var cleanUpResponseBody any
@@ -190,7 +192,7 @@ func (c *arvanCloudDNSProviderSolver) CleanUp(ch *v1alpha1.ChallengeRequest) err
 		}
 	}
 	sugar.Warnw(
-		"Record not found to crean up in ArvanCloud",
+		"Record not found to clean up in ArvanCloud",
 		"Name", name,
 		"Type", "TXT",
 		"Value", ch.Key,
