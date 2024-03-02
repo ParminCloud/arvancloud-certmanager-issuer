@@ -33,6 +33,8 @@ spec:
               value: {{ .Values.groupName | quote }}
             - name: ARVANCLOUD_API_BASE_URL
               value: {{ .Values.arvancloudAPIBaseURL | quote }}
+            - name: LOG_LEVEL
+              value: {{ .Values.logLevel | quote }}
           ports:
             - name: https
               containerPort: 443

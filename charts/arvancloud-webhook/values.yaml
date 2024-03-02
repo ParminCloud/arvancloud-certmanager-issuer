@@ -1,5 +1,6 @@
 groupName: acme.parmin.cloud
 arvancloudAPIBaseURL: https://napi.arvancloud.ir
+logLevel: INFO
 
 certManager:
   namespace: cert-manager
