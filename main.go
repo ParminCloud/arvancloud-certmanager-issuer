@@ -278,7 +278,10 @@ func (c *arvanCloudDNSProviderSolver) SendAPIRequest(method, uri, token string, 
 	if len(tokenParts) != 2 {
 		return nil, fmt.Errorf("Token is not valid, it should be in two parts")
 	}
-	rel := &url.URL{Path: uri}
+	rel, err := url.Parse(uri)
+	if err != nil {
+		return nil, err
+	}
 	u := ArvanCloudAPIBaseURL.ResolveReference(rel)
 	var buf io.ReadWriter
 	if requestBody != nil {
