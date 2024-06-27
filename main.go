@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"reflect"
 	"strings"
 	"time"
 
@@ -336,7 +337,7 @@ func (c *arvanCloudDNSProviderSolver) SendAPIRequest(method, uri, token string, 
 		"Took", latency.String(),
 	)
 	defer resp.Body.Close()
-	if responseBody != nil {
+	if reflect.ValueOf(&responseBody).Kind() == reflect.Ptr {
 		err = json.NewDecoder(resp.Body).Decode(responseBody)
 	}
 	return resp, err
