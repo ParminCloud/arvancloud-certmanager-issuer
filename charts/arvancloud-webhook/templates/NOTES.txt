@@ -36,7 +36,7 @@ Here are two example usages that you can use
 	          config:
 	            authApiSecretRef: 
 	              name: "arvancloud-credentials"
-	              key":  "apikey"
+	              key": "apikey"
 
 
 2.
