@@ -1,12 +1,19 @@
+# syntax=docker/dockerfile:1
+
 ARG GO_VERSION=1.21
 ARG DEBIAN_VERSION=bookworm
+ARG DOCKER_REGISTRY=docker.io
 
-FROM registry.docker.ir/golang:${GO_VERSION}-${DEBIAN_VERSION} AS build_base
+FROM ${DOCKER_REGISTRY}/library/golang:${GO_VERSION}-${DEBIAN_VERSION} AS build_base
 
 WORKDIR /workspace
 ENV CGO_ENABLED=0
 
-RUN apt-get update && \
+RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
+
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+	--mount=type=cache,target=/var/lib/apt,sharing=locked \
+	apt-get update && \
 	apt-get install -y git
 
 FROM build_base AS build_deps
@@ -20,11 +27,16 @@ FROM build_deps AS build
 
 COPY . .
 
-RUN go build -o webhook -ldflags '-w -extldflags "-static"' .
+RUN --mount=type=cache,target=/root/.cache/go-build \
+	go build -o webhook -ldflags '-w -extldflags "-static"' .
 
-FROM registry.docker.ir/debian:${DEBIAN_VERSION}-slim
+FROM ${DOCKER_REGISTRY}/library/debian:${DEBIAN_VERSION}-slim
 
-RUN apt-get update && \
+RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
+
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+	--mount=type=cache,target=/var/lib/apt,sharing=locked \
+	apt-get update && \
 	apt-get install -y ca-certificates && \
 	update-ca-certificates
 
