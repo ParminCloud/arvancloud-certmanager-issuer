@@ -3,6 +3,7 @@
 ARG GO_VERSION=1.21
 ARG DEBIAN_VERSION=bookworm
 ARG DOCKER_REGISTRY=docker.io
+ARG LD_FLAGS='-w -extldflags "-static"'
 
 FROM ${DOCKER_REGISTRY}/library/golang:${GO_VERSION}-${DEBIAN_VERSION} AS build_base
 
@@ -21,17 +22,17 @@ FROM build_base AS build_deps
 COPY --link go.mod .
 COPY --link go.sum .
 
-RUN --mount=type=cache,target=/go/pkg/mod \
-	go mod download
+RUN go mod download
 
 FROM build_deps AS build
+ARG LD_FLAGS
 
 COPY --link . .
 
 RUN --mount=type=cache,target=/root/.cache/go-build \
-	go build -o webhook -ldflags '-w -extldflags "-static"' .
+	go build -o webhook -ldflags ${LD_FLAGS} .
 
-FROM ${DOCKER_REGISTRY}/library/debian:${DEBIAN_VERSION}-slim
+FROM ${DOCKER_REGISTRY}/library/debian:${DEBIAN_VERSION}-slim AS runtime
 
 RUN rm -f /etc/apt/apt.conf.d/docker-clean; echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache
 
