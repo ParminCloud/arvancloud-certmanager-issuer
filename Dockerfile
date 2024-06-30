@@ -18,14 +18,15 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 
 FROM build_base AS build_deps
 
-COPY go.mod .
-COPY go.sum .
+COPY --link go.mod .
+COPY --link go.sum .
 
-RUN go mod download
+RUN --mount=type=cache,target=/go/pkg/mod \
+	go mod download
 
 FROM build_deps AS build
 
-COPY . .
+COPY --link . .
 
 RUN --mount=type=cache,target=/root/.cache/go-build \
 	go build -o webhook -ldflags '-w -extldflags "-static"' .
