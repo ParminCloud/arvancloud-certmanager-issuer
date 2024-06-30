@@ -3,7 +3,7 @@
 ARG GO_VERSION=1.21
 ARG DEBIAN_VERSION=bookworm
 ARG DOCKER_REGISTRY=docker.io
-ARG LD_FLAGS='-w -extldflags "-static"'
+ARG LD_FLAGS="-w -extldflags '-static'"
 
 FROM ${DOCKER_REGISTRY}/library/golang:${GO_VERSION}-${DEBIAN_VERSION} AS build_base
 
@@ -19,18 +19,19 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 
 FROM build_base AS build_deps
 
-COPY --link go.mod .
-COPY --link go.sum .
+COPY --link go.mod ./
+COPY --link go.sum ./
 
-RUN go mod download
+RUN --mount=type=cache,target=/go/pkg/mod \
+	go mod download
 
 FROM build_deps AS build
 ARG LD_FLAGS
 
-COPY --link . .
+COPY --link . ./
 
 RUN --mount=type=cache,target=/root/.cache/go-build \
-	go build -o webhook -ldflags ${LD_FLAGS} .
+	go build -o webhook -ldflags "${LD_FLAGS}" .
 
 FROM ${DOCKER_REGISTRY}/library/debian:${DEBIAN_VERSION}-slim AS runtime
 
