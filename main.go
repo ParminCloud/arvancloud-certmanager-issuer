@@ -96,7 +96,7 @@ func (cfg *arvanCloudDNSProviderConfig) GetAPIKey(namespace string, client *kube
 		return cfg.APIKey, nil
 	}
 	if cfg.APIKeySecretRef.LocalObjectReference.Name == "" {
-		return "", fmt.Errorf("You should provide one of apiKey or apiKeySecretRef")
+		return "", fmt.Errorf("one of apiKey or apiKeySecretRef should be provided")
 	}
 	secret, err := client.CoreV1().Secrets(namespace).Get(context.TODO(), cfg.APIKeySecretRef.LocalObjectReference.Name, kubemetav1.GetOptions{})
 	if err != nil {
