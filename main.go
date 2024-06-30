@@ -305,23 +305,23 @@ func (c *arvanCloudDNSProviderSolver) SendAPIRequest(method, uri, token string, 
 	curlHeaders := ""
 	for k, v := range req.Header {
 		if k == "Authorization" {
-			filteredHeaders[k] = tokenParts[0] + " " + strings.Repeat("#", len(tokenParts[1]))
+			filteredHeaders[k] = tokenParts[0] + " [REDACTED]"
 			continue
 		}
-		curlHeaders += fmt.Sprintf(` -H %q`, fmt.Sprintf("%s: %s", k, v[0]))
+		curlHeaders += fmt.Sprintf("-H '%s: %s'", k, v[0])
 		filteredHeaders[k] = v[0]
 	}
 	curlOpts := curlHeaders
 	if requestBody != nil {
 		body, _ := json.Marshal(requestBody)
-		curlOpts += fmt.Sprintf(" -d %s", string(body))
+		curlOpts += fmt.Sprintf(" -d '%s'", string(body))
 	}
 	sugar.Debugw(
 		"Sending request to ArvanCloud API",
 		"Headers", filteredHeaders,
 		"Body", fmt.Sprintf("%+v", requestBody),
 		"URL", u.String(),
-		"cURL", fmt.Sprintf("curl -v -X %s %s '%s'", req.Method, curlOpts, u.String()),
+		"cURL", fmt.Sprintf(`curl -v -X '%s' %s '%s'`, req.Method, curlOpts, u.String()),
 	)
 	startTime := time.Now()
 	resp, err := c.httpClient.Do(req)
