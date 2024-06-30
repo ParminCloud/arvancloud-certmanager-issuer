@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"reflect"
 	"strings"
 	"time"
 
@@ -232,7 +233,7 @@ func (c *arvanCloudDNSProviderSolver) CleanUp(ch *v1alpha1.ChallengeRequest) err
 	for _, record := range records.Data {
 		if record.Name == name && record.Value["text"] == ch.Key {
 			var cleanUpResponseBody any
-			response, err := c.SendAPIRequest("DELETE", "/cdn/4.0/domains/"+strings.TrimSuffix(ch.ResolvedZone, ".")+"/dns-records/"+record.ID, apiKey, nil, cleanUpResponseBody)
+			response, err := c.SendAPIRequest("DELETE", "/cdn/4.0/domains/"+strings.TrimSuffix(ch.ResolvedZone, ".")+"/dns-records/"+record.ID, apiKey, nil, &cleanUpResponseBody)
 			if err != nil {
 				sugar.Errorw(
 					"Error while cleaning up records from ArvanCloud",
@@ -336,7 +337,9 @@ func (c *arvanCloudDNSProviderSolver) SendAPIRequest(method, uri, token string, 
 		"Took", latency.String(),
 	)
 	defer resp.Body.Close()
-	err = json.NewDecoder(resp.Body).Decode(responseBody)
+	if reflect.ValueOf(&responseBody).Kind() == reflect.Ptr {
+		err = json.NewDecoder(resp.Body).Decode(responseBody)
+	}
 	return resp, err
 }
 
