@@ -52,7 +52,6 @@ type (
 
 func main() {
 	var cfg arvanCloudDNSProviderGlobalConfig
-
 	err := cleanenv.ReadEnv(&cfg)
 	if err != nil {
 		panic(err)
@@ -309,7 +308,7 @@ func (c *arvanCloudDNSProviderSolver) SendAPIRequest(method, uri, token string, 
 			filteredHeaders[k] = tokenParts[0] + " [REDACTED]"
 			continue
 		}
-		curlHeaders += fmt.Sprintf("-H '%s: %s'", k, v[0])
+		curlHeaders += fmt.Sprintf(" -H '%s: %s'", k, v[0])
 		filteredHeaders[k] = v[0]
 	}
 	curlOpts := curlHeaders
@@ -329,7 +328,7 @@ func (c *arvanCloudDNSProviderSolver) SendAPIRequest(method, uri, token string, 
 	if err != nil {
 		return nil, err
 	}
-	latency := startTime.Sub(time.Now())
+	latency := time.Now().Sub(startTime)
 	sugar.Debugw(
 		"Request sent to ArvanCloud API",
 		"URL", u.String(),
