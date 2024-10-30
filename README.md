@@ -5,8 +5,6 @@
 # ArvanCloud ACME Webhook for CertManger
 
 [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/arvancloud-webhook)](https://artifacthub.io/packages/search?repo=arvancloud-webhook)
-[![Docker Tags](https://ghcr-badge.egpl.dev/ParminCloud/arvancloud-certmanager-issuer/tags?trim=major&color=green_2&label=Docker%20Tags&ignore=*.sig)](https://ghcr.io/ParminCloud/arvancloud-certmanager-issuer/)
-[![Docker Tags](https://ghcr-badge.egpl.dev/ParminCloud/arvancloud-certmanager-issuer/tags?trim=patch&color=green_2&label=Docker%20Tags&ignore=*.sig)](https://ghcr.io/ParminCloud/arvancloud-certmanager-issuer/)
 [![Latest release](https://img.shields.io/github/release/ParminCloud/arvancloud-certmanager-issuer.svg)](https://github.com/ParminCloud/arvancloud-certmanager-issuer/releases)
 
 A more simpler and maintainable ACME Webhook Issuer for CertManager Using ArvanCloud DNS/CDN api
