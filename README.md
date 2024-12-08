@@ -2,7 +2,7 @@
   <img src="https://raw.githubusercontent.com/cert-manager/cert-manager/d53c0b9270f8cd90d908460d69502694e1838f5f/logo/logo-small.png" height="256" width="256" alt="cert-manager project logo" />
 </p>
 
-# ArvanCloud ACME Webhook for CertManger
+# ArvanCloud ACME Webhook for CertManager
 
 [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/arvancloud-webhook)](https://artifacthub.io/packages/search?repo=arvancloud-webhook)
 [![Latest release](https://img.shields.io/github/release/ParminCloud/arvancloud-certmanager-issuer.svg)](https://github.com/ParminCloud/arvancloud-certmanager-issuer/releases)
