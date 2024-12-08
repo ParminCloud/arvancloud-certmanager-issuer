@@ -5,7 +5,7 @@ go 1.22.0
 toolchain go1.22.5
 
 require (
-	github.com/cert-manager/cert-manager v1.16.1
+	github.com/cert-manager/cert-manager v1.16.2
 	github.com/ilyakaznacheev/cleanenv v1.5.0
 	github.com/miekg/dns v1.1.62
 	github.com/stretchr/testify v1.9.0
