@@ -2,6 +2,23 @@ apiVersion: v1
 entries:
   arvancloud-webhook:
   - apiVersion: v1
+    appVersion: v0.0.9
+    created: "2024-12-09T13:47:40.185182256Z"
+    description: Helm Chart to install ArvanCloud Webhook Issuer
+    digest: 5a62a29f9a945ba0806a14091a8d1a501600f8d6fa81dc4909bf6e627c02f1f6
+    home: https://github.com/ParminCloud/arvancloud-certmanager-issuer/
+    maintainers:
+    - email: info@karimi.dev
+      name: Muhammed Hussein Karimi
+      url: https://karimi.dev
+    name: arvancloud-webhook
+    sources:
+    - https://github.com/ParminCloud/arvancloud-certmanager-issuer/
+    type: application
+    urls:
+    - https://github.com/ParminCloud/arvancloud-certmanager-issuer/releases/download/chart-0.0.13/arvancloud-webhook-0.0.13.tgz
+    version: 0.0.13
+  - apiVersion: v1
     appVersion: v0.0.8
     created: "2024-11-10T11:12:12.613134364Z"
     description: Helm Chart to install ArvanCloud Webhook Issuer
@@ -171,4 +188,4 @@ entries:
     urls:
     - https://github.com/ParminCloud/arvancloud-certmanager-issuer/releases/download/chart-0.0.2/arvancloud-webhook-0.0.2.tgz
     version: 0.0.2
-generated: "2024-11-10T11:12:12.613184217Z"
+generated: "2024-12-09T13:47:40.185236928Z"
