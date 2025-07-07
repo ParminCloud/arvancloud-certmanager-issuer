@@ -3,7 +3,7 @@ module github.com/ParminCloud/arvancloud-certmanager-issuer
 go 1.23.8
 
 require (
-	github.com/cert-manager/cert-manager v1.18.1
+	github.com/cert-manager/cert-manager v1.18.2
 	github.com/ilyakaznacheev/cleanenv v1.5.0
 	github.com/miekg/dns v1.1.66
 	github.com/stretchr/testify v1.10.0
