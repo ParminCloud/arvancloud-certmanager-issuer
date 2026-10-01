@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-ARG GO_VERSION=1.25
+ARG GO_VERSION=1.26
 ARG DEBIAN_VERSION=trixie
 ARG DOCKER_REGISTRY=docker.io
 ARG LD_FLAGS="-w -extldflags '-static'"
