@@ -33,7 +33,7 @@ jobs:
         uses: azure/setup-helm@v5
 
       - name: Run chart-releaser
-        uses: helm/chart-releaser-action@v1.7.0
+        uses: helm/chart-releaser-action@v1.8.0
         with:
           mark_as_latest: false
         env:
